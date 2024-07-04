@@ -30,14 +30,20 @@ async def get(
 async def query(usecase: ProductUsecase = Depends()) -> List[ProductOut]:
     return await usecase.query()
 
-
-@router.patch(path="/{id}", status_code=status.HTTP_200_OK)
+# alteração do patch para um retorno mais amigavel 
+@router.patch("/{id}", status_code=status.HTTP_200_OK)
 async def patch(
     id: UUID4 = Path(alias="id"),
     body: ProductUpdate = Body(...),
-    usecase: ProductUsecase = Depends(),
+    usecase: ProductUsecase = Depends()
 ) -> ProductUpdateOut:
-    return await usecase.update(id=id, body=body)
+    try:
+        updated_product = await usecase.update(id=id, body=body)
+        return updated_product
+    except NotFoundException as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dado não encontrado")
+
+####################################################################################
 
 
 @router.delete(path="/{id}", status_code=status.HTTP_204_NO_CONTENT)
